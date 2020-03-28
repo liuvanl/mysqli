@@ -168,3 +168,74 @@
 	$sqls = "$sq1;$sql2;$sql3..............";
 	$mySQLi->multi_query($sql3);
 ```
+### 案例
+```php
+<?php
+	header('content-type:text/html;charset=utf8');
+	// 链接数据库
+	$mySQLi = new MySQLi('localhost','root','','phpStudy',3306);
+	// 判断是否连接成功
+	if($mySQLi -> connect_errno){
+		die('数据库链接失败,错误信息是'.$mySQLi -> connect_error);
+		exit;
+	}
+	// 设置字符集
+	$mySQLi -> set_charset('utf8');
+	// 拼接sql语句
+	$sqls = "INSERT INTO `stu` VALUES(100,'宋江',1,2,3);";
+	$sqls .= "INSERT INTO `stu` VALUES(200,'吴用',11,22,33);";
+	$sqls .= "INSERT INTO `stu` VALUES(300,'卢俊义',111,222,333)";
+	
+	// 执行
+	if($mySQLi -> multi_query($sqls)){
+		echo '<br>添加成功';
+	}else {
+		echo '<br>添加失败，错误原因是'.$mySQLi -> error;
+		exit;
+	}
+	
+?>
+```
+### 关于批量的执行dml语句的细节说明
+1. 批量执行sql语句分成两大类(dml[insert,update,delte], dql[select])， 两大类之间不要混用.
+2. 批量执行sql语句，返回的结果是以一条sql执行的结果为准, 当某条dml错误了，后面的代码就不执行， 但是错误之前的sql还是执行成功的.
+```php
+<?php
+	header('content-type:text/html;charset=utf8');
+	// 链接数据库
+	$mySQLi = new MySQLi('localhost','root','','phpStudy',3306);
+	// 判断是否连接成功
+	if($mySQLi -> connect_errno){
+		die('数据库链接失败,错误信息是'.$mySQLi -> connect_error);
+		exit;
+	}
+	// 设置字符集
+	$mySQLi -> set_charset('utf8');
+	// 拼接sql语句
+	$sqls = "SELECT empno,job FROM emp;";
+	$sqls .= "SELECT id,name FROM stu";
+	
+	// 执行
+	if($mySQLi -> multi_query($sqls)){
+		// $res 就是一个mysql_result对象
+		do{
+			$res = $mySQLi -> store_result();
+			while($row = $res->fetch_assoc()){
+				foreach($row as $val){
+					echo '---'.$val;
+				}
+				echo '<br>';
+			}
+			// 释放结果
+			$res -> free();
+			// 判断还有没有下一个结果集，该函数只是判断还有没有更多的结果。
+			if(!$mySQLi->more_results()){
+				break;
+			}
+		}while($mySQLi -> next_result());
+	}else {
+		echo '<br>添加失败，错误原因是'.$mySQLi -> error;
+		exit;
+	}	
+?>
+```
