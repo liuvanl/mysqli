@@ -126,3 +126,45 @@
 ```php
   echo '<br>id='.$mySQLi -> insert_id;
 ```
+## 1.4 mysqli扩展增强-事务控制
+> 关于事务的概念，我们前面mysql数据库时讲过了，现在我们直接演示如何在mysqli中，进行事务控制 。
+```php
+<?php
+	header('content-type:text/html;charset=utf8');
+	// 链接数据库
+	$mySQLi = new MySQLi('localhost','root','','phpStudy',3306);
+	// 判断是否连接成功
+	if($mySQLi -> connect_errno){
+		die('数据库链接失败,错误信息是'.$mySQLi -> connect_error);
+		exit;
+	}
+	// 设置字符集
+	$mySQLi -> set_charset('utf8');
+	
+	// sql语句
+	$sql1 = "update wares set price = price - 1000 where id = 1";
+	$sql2 = "update wares set price = price + 1000 where id = 2";
+	
+	// 开启事务
+	$mySQLi -> begin_transaction();
+	
+	$res1 = $mySQLi -> query($sql1);
+	$res2 = $mySQLi -> query($sql2);
+	
+	if(!$res1 || !$res2){
+		echo 'sql语句执行失败！回滚';
+		$mySQLi -> rollback();
+	} else {
+		echo 'sql语句执行成功！';
+		$mySQLi -> commit();
+	}
+?>
+```
+## 1.5 mysqli扩展-批量执行sql语句
+### 先看一个需求
+> 先看一个需求:有时，我们需要一次性执行多条sql语句，比如批量增加用户，这时如果单条单条的向mysql数据库发送sql指令，效率不高，这时可以考虑使用批量执行sql语句的方式. 
+### 批量执行的语法
+```php
+	$sqls = "$sq1;$sql2;$sql3..............";
+	$mySQLi->multi_query($sql3);
+```
